@@ -1,0 +1,256 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// TABLE - USER
+model User {
+  id                   Int       @id @default(autoincrement())
+  name                 String
+  email                String    @unique
+  password             String
+  resetPasswordToken   String?
+  resetPasswordExpires DateTime?
+  created_at           DateTime? @default(now())
+  updated_at           DateTime? @default(now())
+
+  @@map("users")
+}
+
+// // TABLE -  RECEIPT METHOD
+// model ReceiptMethod {
+//   id             Int       @id @default(autoincrement())
+//   receipt_method String
+//   created_at     DateTime? @default(now())
+//   updated_at     DateTime? @default(now())
+
+//   // Relação com receitas
+//   incomes Income[] @relation("ReceiptMethodIncome")
+
+//   @@map("receipt_methods")
+// }
+
+// TABELA - RECEITA
+// model Income {
+//   id                Int      @id @default(autoincrement())
+//   description       String
+//   amount            Float
+//   date              DateTime @default(now())
+//   category_id       Int // Referência à tabela de categorias
+//   receipt_method_id Int // Referência à tabela de formas de recebimento
+//   credit_card_id    Int? // Referência opcional à tabela de cartão de crédito
+
+//   // Relacionamentos
+//   category      ExpenseCategory @relation("CategoryIncome", fields: [category_id], references: [id])
+//   receiptMethod ReceiptMethod   @relation("ReceiptMethodIncome", fields: [receipt_method_id], references: [id])
+//   creditCard    CreditCard?     @relation("CreditCardIncome", fields: [credit_card_id], references: [id])
+
+//   @@map("incomes")
+// }
+
+// ----------------------------------------------------------------------------
+
+// TABLE - PAYMENT METHOD
+model PaymentMethod {
+  id         Int       @id @default(autoincrement())
+  name       String
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now())
+
+  // Relação com despesas
+  expense Expense[] @relation("ExpensePaymentMethod")
+
+  @@map("payment_methods")
+}
+
+// TABLE RECURRENCE - EXPENSE
+model RecurringExpense {
+  id                  Int       @id @default(autoincrement())
+  expense_id          Int // Referência para a tabela Expense
+  recurrence_month    Int // Mês da recorrência (1-12)
+  recurrence_year     Int // Ano da recorrência
+  recurrence_due_date DateTime // Data de vencimento
+  recurrence_amount   Float // Valor da despesa fixa para o mês
+  created_at          DateTime? @default(now())
+  updated_at          DateTime? @default(now())
+
+  // Relacionamento com a tabela de despesas
+  expense Expense @relation("ExpenseRecurring", fields: [expense_id], references: [id], onDelete: Cascade)
+
+  @@map("recurring_expenses")
+}
+
+// TABLE INSTALLMENT - EXPENSE 
+model InstallmentExpense {
+  id                   Int       @id @default(autoincrement())
+  expense_id           Int // Referência para a tabela ExpenseCreditCard
+  installment_number   Int // Número da parcela
+  installment_due_date DateTime  @default(now()) // Data de vencimento da parcela
+  installment_amount   Float // Valor da parcela
+  created_at           DateTime? @default(now())
+  updated_at           DateTime? @default(now())
+
+  // Relacionamento com a tabela de despesas com cartão de crédito
+  expense Expense @relation("ExpenseInstallment", fields: [expense_id], references: [id], onDelete: Cascade)
+
+  @@map("installment_expenses")
+}
+
+// TABLE - EXPENSE
+model Expense {
+  id                  Int       @id @default(autoincrement())
+  description         String
+  amount              Float
+  due_date            DateTime  @default(now())
+  expense_category_id Int // Referência à tabela de categorias
+  payment_method_id   Int // Referência à tabela de cartão de crédito
+  recurrence_id       Int // Referência à tabela de tipos de recorrência
+  installments        Int? // Número de parcelas (para despesas parceladas)
+  status              Boolean?  @default(false)
+  created_at          DateTime? @default(now())
+  updated_at          DateTime? @default(now())
+
+  // Relacionamento com a tabela de categorias
+  expenseCategory ExpenseCategory @relation("ExpenseCategory", fields: [expense_category_id], references: [id])
+
+  // Relacionamento com a tabela de cartão de crédito
+  paymentMethod PaymentMethod @relation("ExpensePaymentMethod", fields: [payment_method_id], references: [id])
+
+  // Relacionamento com a tabela de tipos de recorrência
+  recurrenceType RecurrenceType @relation("ExpenseRecurrenceType", fields: [recurrence_id], references: [id])
+
+  // Relacionamento com a tabela de recorrências
+  recurringExpense RecurringExpense[] @relation("ExpenseRecurring")
+
+  // Relacionamento com a tabela de parcelas
+  installmentExpense InstallmentExpense[] @relation("ExpenseInstallment")
+
+  @@map("expenses")
+}
+
+// ----------------------------------------------------------------------------
+
+// TABLE - EXPENSE CATEGORY
+model ExpenseCategory {
+  id         Int       @id @default(autoincrement())
+  name       String
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now())
+
+  // Relação com despesas de cartão de crédito
+  creditCardExpense CreditCardExpense[] @relation("CreditCardExpenseCategory")
+
+  // Relação com despesas
+  expense Expense[] @relation("ExpenseCategory")
+
+  @@map("expense_categories")
+}
+
+// TABLE RECURRENCE CREDIT CARD EXPENSE
+model RecurrenceType {
+  id         Int       @id @default(autoincrement())
+  name       String
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now())
+
+  // Relação com despesas de cartão de crédito
+  creditCardExpense CreditCardExpense[] @relation("CreditCardExpenseRecurrenceType")
+
+  // Relação com despesas
+  expense Expense[] @relation("ExpenseRecurrenceType")
+
+  @@map("recurrence_types")
+}
+
+// ----------------------------------------------------------------------------
+
+// TABLE - CREDIT CARD
+model CreditCard {
+  id          Int       @id @default(autoincrement())
+  name        String
+  closing_day Int
+  due_date    Int
+  created_at  DateTime? @default(now())
+  updated_at  DateTime? @default(now())
+
+  // Relações com despesas de cartão de crédito
+  creditCardExpense CreditCardExpense[] @relation("CreditCardExpenseCreditCard")
+
+  @@map("credit_cards")
+}
+
+// TABELA - DESPESAS NO CARTÃO DE CRÉDITO
+model CreditCardExpense {
+  id                  Int       @id @default(autoincrement())
+  description         String
+  amount              Float
+  date                DateTime  @default(now())
+  expense_category_id Int // Referência à tabela de categorias
+  credit_card_id      Int // Referência à tabela de cartão de crédito
+  fixed_expense_id    Int // Referência à tabela de tipos de recorrência
+  installments        Int? // Número de parcelas (para despesas parceladas)
+  status              Boolean?  @default(false) // Status da despesa
+  created_at          DateTime? @default(now())
+  updated_at          DateTime? @default(now())
+
+  // Relacionamento com a tabela de categorias
+  expenseCategory ExpenseCategory @relation("CreditCardExpenseCategory", fields: [expense_category_id], references: [id])
+
+  // Relacionamento com a tabela de cartão de crédito
+  creditCard CreditCard @relation("CreditCardExpenseCreditCard", fields: [credit_card_id], references: [id])
+
+  // Relacionamento com a tabela de tipos de recorrência
+  recurrenceType RecurrenceType @relation("CreditCardExpenseRecurrenceType", fields: [fixed_expense_id], references: [id])
+
+  // Relacionamento com a tabela de recorrências
+  expenseRecurrences RecurrenceCreditCardExpense[] @relation("CreditCardExpenseRecurrences")
+
+  // Relacionamento com a tabela de parcelas
+  expenseInstallments Installment[] @relation("CreditCardExpenseInstallments")
+
+  @@map("credit_card_expenses")
+}
+
+// TABELA PARCELAS - DESPESAS NO CARTÃO DE CRÉDITO
+model Installment {
+  id                     Int       @id @default(autoincrement())
+  credit_card_expense_id Int // Referência para a tabela ExpenseCreditCard
+  installment_number     Int // Número da parcela
+  installment_due_date   DateTime // Data de vencimento da parcela
+  installment_amount     Float // Valor da parcela
+  created_at             DateTime? @default(now())
+  updated_at             DateTime? @default(now())
+
+  // Relacionamento com a tabela de despesas com cartão de crédito
+  creditCardExpense CreditCardExpense @relation("CreditCardExpenseInstallments", fields: [credit_card_expense_id], references: [id], onDelete: Cascade)
+
+  @@map("installments")
+}
+
+// TABELA RECORRÊNCIA - DESPESAS NO CARTÃO DE CRÉDITO
+model RecurrenceCreditCardExpense {
+  id                     Int       @id @default(autoincrement())
+  credit_card_expense_id Int // Referência para a tabela ExpenseCreditCard
+  recurrence_month       Int // Mês da recorrência (1-12)
+  recurrence_year        Int // Ano da recorrência
+  recurrence_due_date    DateTime // Data de vencimento
+  recurrence_amount      Float // Valor da despesa fixa para o mês
+  created_at             DateTime? @default(now())
+  updated_at             DateTime? @default(now())
+
+  // Relacionamento com a tabela de despesas com cartão de crédito
+  creditCardExpense CreditCardExpense @relation("CreditCardExpenseRecurrences", fields: [credit_card_expense_id], references: [id], onDelete: Cascade)
+
+  @@map("recurrence_credit_card_expenses")
+}
+
