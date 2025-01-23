@@ -1,5 +1,7 @@
-'use client';
+"use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function UserForm() {
   // Estado para armazenar os dados do formulário
@@ -44,13 +46,22 @@ export default function UserForm() {
     }
   };
 
+  const routerlogin = useRouter();
+
+  function handleToLogin(){
+    routerlogin.push("/login");
+  }
+
   // Componente de formulário de cadastro de usuário
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-semibold text-center mb-6">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4   shadow-lg w-full   ">
+      <h2 className="text-2xl font-semibold text-center mb-6 text-gray-800">
         Cadastro de Usuário
       </h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-6 bg-white p-8 rounded-md shadow-md w-full max-w-sm"
+      >
         <div>
           <label
             htmlFor="username"
@@ -64,9 +75,9 @@ export default function UserForm() {
             name="name"
             value={formData.name}
             onChange={handleChange}
-            className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             required
-            placeholder="Nome de Usuário"
+            placeholder="Digite seu nome"
+            className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
         </div>
 
@@ -83,9 +94,9 @@ export default function UserForm() {
             name="email"
             value={formData.email}
             onChange={handleChange}
-            className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             required
-            placeholder="Email do Usuário"
+            placeholder="Digite seu email"
+            className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
         </div>
 
@@ -102,14 +113,21 @@ export default function UserForm() {
             name="password"
             value={formData.password}
             onChange={handleChange}
-            className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             required
-            placeholder="Senha"
+            placeholder="Digite sua senha"
+            className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
+        </div>
+
+        <div className="text-center">
+          <Link href="/login" className="text-indigo-600 hover:text-indigo-800">
+            Já tem uma conta? Faça login
+          </Link>
         </div>
 
         <button
           type="submit"
+          onClick={handleToLogin}
           className="w-full py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
           Cadastrar

@@ -1,14 +1,40 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
+import { NextResponse, NextRequest } from "next/server";
+import { jwtVerify, JWTPayload } from "jose";
 
-export default clerkMiddleware();
+// Converte a chave secreta para um ArrayBuffer
+const secretJWT = new TextEncoder().encode(process.env.JWT_SECRET);
+
+// Middleware para proteger as rotas do dashboard
+export async function middleware(req: NextRequest) {
+  // Obtém o token dos cookies
+  const token = req.cookies.get("token");
+
+  // Se não houver token, redireciona para a página de login
+  if (!token) {
+    console.log("Nenhum token encontrado. Redirecionando para /login");
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+
+  try {
+    // Verifica o token JWT
+    const { payload }: { payload: JWTPayload } = await jwtVerify(
+      token.value,
+      secretJWT
+    );
+
+    console.log("Token verificado com sucesso:", payload);
+
+    return NextResponse.next();
+  } catch (error) {
+    if ((error as Error).name === "JWTExpired") {
+      console.log("Token expirado. Redirecionando para /login");
+    } else {
+      console.log("Falha na verificação do token:", error);
+    }
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+}
 
 export const config = {
-  matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
-    // Ignore os componentes internos do Next.js e todos os arquivos estáticos, a menos que sejam encontrados nos parâmetros de pesquisa
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes
-    // Sempre execute rotas de API
-    "/(api|trpc)(.*)",
-  ],
+  matcher: ["/dashboard/:path*"], // Protege todas as rotas começando com /dashboard
 };

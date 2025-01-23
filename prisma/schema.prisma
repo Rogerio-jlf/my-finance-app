@@ -19,6 +19,7 @@ model User {
   name                 String
   email                String    @unique
   password             String
+  // clerkId              String    @unique
   resetPasswordToken   String?
   resetPasswordExpires DateTime?
   created_at           DateTime? @default(now())
@@ -253,4 +254,3 @@ model RecurrenceCreditCardExpense {
 
   @@map("recurrence_credit_card_expenses")
 }
-
