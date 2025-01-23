@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -13,9 +14,18 @@ export default function UserForm() {
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [errorEmail, setErrorEmail] = useState("");
+  const [errorPassword, setErrorPassword] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
 
   // Função para atualizar o estado do formulário
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    // Limpa os erros de validação
+    setErrorEmail("");
+    setErrorPassword("");
+    setError("");
+
     const { name, value } = e.target;
     setFormData((prevState) => ({
       ...prevState,
@@ -23,9 +33,49 @@ export default function UserForm() {
     }));
   }
 
+  // Função para alternar a visibilidade da senha
+  function toggleShowPassword() {
+    setShowPassword(!showPassword);
+  }
+
+  function capitalizeWords(e: React.ChangeEvent<HTMLInputElement>) {
+    const words = e.target.value.split(" ");
+    for (let i = 0; i < words.length; i++) {
+      words[i] =
+        words[i].charAt(0).toUpperCase() + words[i].slice(1).toLowerCase();
+    }
+    const capitalized = words.join(" ");
+    setFormData((prevState) => ({
+      ...prevState,
+      name: capitalized,
+    }));
+  }
+
+  function validateEmail(email: string) {
+    const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+    return regex.test(email);
+  }
+
+  function validatePassword(password: string) {
+    const regex = /^(?=.*[A-Z])(?=.*[!@#$%^&*])(?=.{8,})/;
+    return regex.test(password);
+  }
+
   // Função para lidar com o envio do formulário
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!validateEmail(formData.email)) {
+      setErrorEmail("E-mail inválido. Digite um e-mail válido.");
+      return;
+    }
+
+    if (!validatePassword(formData.password)) {
+      setErrorPassword(
+        "A senha deve conter no mínimo 8 caracteres, incluindo pelo menos uma letra maiúscula e um caractere especial."
+      );
+      return;
+    }
 
     try {
       const response = await fetch("/api/users", {
@@ -41,23 +91,14 @@ export default function UserForm() {
 
       if (response.ok) {
         alert("Usuário criado com sucesso!");
+        router.push("/login");
       } else {
-        alert(data.error);
+        setError(data.error);
       }
     } catch (error) {
       console.error("Erro ao criar usuário:", error);
     }
   };
-
-  const routerlogin = useRouter();
-
-  function handleToLogin() {
-    routerlogin.push("/login");
-  }
-
-  function toggleShowPassword() {
-    setShowPassword(!showPassword);
-  }
 
   // Componente de formulário de cadastro de usuário
   return (
@@ -66,34 +107,38 @@ export default function UserForm() {
         onSubmit={handleSubmit}
         className="space-y-6 bg-white p-8 rounded-md shadow-md w-full max-w-sm relative"
       >
-        <h2 className="text-2xl font-semibold text-center mb-6 text-gray-800">
-          Cadastro de Usuário
-        </h2>
+        {/* h1 */}
         <div>
-          <label
-            htmlFor="username"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Nome de Usuário
+          <h1 className="text-3xl font-semibold text-center mb-6 text-gray-800">
+            Cadastro de Usuário
+          </h1>
+        </div>
+
+        {/* Input Name */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Nome Completo:
           </label>
           <input
             type="text"
             id="name"
             name="name"
             value={formData.name}
-            onChange={handleChange}
+            onChange={(e) => {
+              handleChange(e);
+              capitalizeWords(e);
+            }}
+            minLength={10}
             required
             placeholder="Digite seu nome"
             className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
         </div>
 
+        {/* Input Email */}
         <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Email
+          <label className="block text-sm font-medium text-gray-700">
+            E-mail:
           </label>
           <input
             type="email"
@@ -101,18 +146,24 @@ export default function UserForm() {
             name="email"
             value={formData.email}
             onChange={handleChange}
+            minLength={10}
             required
-            placeholder="Digite seu email"
+            placeholder="Digite seu e-mail"
             className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
+
+          {/* Error Email */}
+          {errorEmail && (
+            <div>
+              <p className="text-red-500 text-xs italic mt-4">{errorEmail}</p>
+            </div>
+          )}
         </div>
 
+        {/* Input Password */}
         <div className="relative">
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Senha
+          <label className="block text-sm font-medium text-gray-700">
+            Senha:
           </label>
           <input
             type={showPassword ? "text" : "password"}
@@ -120,6 +171,7 @@ export default function UserForm() {
             name="password"
             value={formData.password}
             onChange={handleChange}
+            minLength={8}
             required
             placeholder="Digite sua senha"
             className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
@@ -127,25 +179,41 @@ export default function UserForm() {
           <button
             type="button"
             onClick={toggleShowPassword}
-            className="absolute right-2 top-9"
+            className="absolute right-2 top-7"
           >
             {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
           </button>
+
+          {/* Error Password */}
+          {errorPassword && (
+            <div>
+              <p className="text-red-500 text-xs italic mt-4">
+                {errorPassword}
+              </p>
+            </div>
+          )}
         </div>
 
-        <div className="text-center">
+        <div className="text-start">
           <Link href="/login" className="text-indigo-600 hover:text-indigo-800">
             Já tem uma conta? Faça login
           </Link>
         </div>
+
         <div>
           <button
             type="submit"
-            onClick={handleToLogin}
             className="w-full py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             Cadastrar
           </button>
+
+          {/* Error */}
+          {error && (
+            <div>
+              <p className="text-red-500 text-xs italic mt-4">{error}</p>
+            </div>
+          )}
         </div>
       </form>
     </div>

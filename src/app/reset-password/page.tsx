@@ -6,18 +6,32 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 
 export default function ResetPasswordPage() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [errorPassword, setErrorPassword] = useState("");
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   // Pegar o token da query string
   const token = searchParams ? searchParams.get("token") : null;
 
+  // Função para validar a senha
+  function validatePassword(password: string) {
+    const regex = /^(?=.*[A-Z])(?=.*[!@#$%^&*])(?=.{8,})/;
+    return regex.test(password);
+  }
+
   // Função para redefinir a senha do usuário
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (!validatePassword(newPassword)) {
+      setErrorPassword(
+        "A senha deve conter pelo menos 8 caracteres, uma letra maiúscula e um caractere especial."
+      );
+      return;
+    }
 
     // Enviar a nova senha para a API de redefinição de senha
     const response = await fetch("/api/auth/reset-password", {
@@ -42,53 +56,72 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 shadow-lg w-full">
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-8 rounded shadow-md w-full max-w-md relative"
+        className="space-y-6 bg-white p-8 rounded-md shadow-md w-full max-w-sm relative"
       >
-        <h1 className="text-2xl mb-6 text-center font-bold">Redefinir Senha</h1>
-        <div className="mb-4 relative">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
+        {/* h1 */}
+        <div>
+          <h1 className="text-3xl font-semibold text-center mb-6 text-gray-800">
+            Redefinir Senha
+          </h1>
+        </div>
+
+        {/* Input Password */}
+        <div className="relative">
+          <label className="block text-sm font-medium text-gray-700">
             Nova senha:
           </label>
           <input
             type={showPassword ? "text" : "password"}
-            placeholder="Nova senha"
+            id="newPassword"
+            name="newPassword"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="border p-2 w-full"
             required
+            placeholder="Digite sua nova senha"
+            className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
           <button
             type="button"
             onClick={toggleShowPassword}
-            className="absolute right-2 top-9"
+            className="absolute right-2 top-7"
           >
             {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
           </button>
+
+          {/* Error Password */}
+          {errorPassword && (
+            <div>
+              <p className="text-red-500 text-xs italic mt-4">
+                {errorPassword}
+              </p>
+            </div>
+          )}
         </div>
-        <div className="mb-4 text-center">
-          <Link href="/login" className="text-blue-500 hover:underline">
+
+        {/* Link Login */}
+        <div className="text-start">
+          <Link href="/login" className="text-indigo-600 hover:text-indigo-800">
             Voltar para o login
           </Link>
         </div>
-        <div className="mb-4">
-          <p className="text-sm text-gray-500">
-            Digite sua nova senha para redefinir.
-          </p>
-        </div>
+
+        {/* Button Submit */}
         <div className="mb-4">
           <button
             type="submit"
-            className="bg-green-500 text-white p-2 w-full rounded hover:bg-green-600"
+            className="w-full py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             Redefinir
           </button>
         </div>
+
+        {/* MSg */}
         {message && (
           <div>
-            <p className="mt-4 text-center text-red-500">{message}</p>
+            <p className="text-red-500 text-xs italic mt-4">{message}</p>
           </div>
         )}
       </form>

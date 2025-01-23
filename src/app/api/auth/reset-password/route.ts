@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   // Verifica se o token é válido
   if (!resetToken || resetToken.expiresAt < new Date() || resetToken.used) {
     return NextResponse.json(
-      { error: "Token inválido ou expirado" },
+      { error: "Token inválido ou expirado." },
       { status: 400 }
     );
   }
@@ -38,5 +38,5 @@ export async function POST(req: Request) {
   });
 
   // Retorna uma resposta de sucesso
-  return NextResponse.json({ message: "Senha redefinida com sucesso" });
+  return NextResponse.json({ message: "Senha redefinida com sucesso!" });
 }

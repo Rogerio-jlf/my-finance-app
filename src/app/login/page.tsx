@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -11,6 +12,8 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { isAuthenticated, setIsAuthenticated } = useAuth();
   const router = useRouter();
 
   // função para lidar com o envio do formulário
@@ -33,6 +36,7 @@ export default function LoginPage() {
       if (response.ok) {
         setEmail("");
         setPassword("");
+        setIsAuthenticated(true);
         router.push("/dashboard");
       } else {
         const { error } = await response.json();
@@ -51,48 +55,61 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 shadow-lg w-full">
       <form
         onSubmit={handleLogin}
-        className="bg-white p-8 rounded shadow-md w-full max-w-sm relative"
+        className="space-y-6 bg-white p-8 rounded-md shadow-md w-full max-w-sm relative"
       >
-        <h1 className="text-3xl font-bold mb-6">Login</h1>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            Email:
+        {/* h1 */}
+        <div>
+          <h1 className="text-3xl font-semibold text-center mb-6 text-gray-800">
+            Login
+          </h1>
+        </div>
+
+        {/* input Email */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            E-mail:
           </label>
           <input
             type="email"
+            id="email"
+            name="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            placeholder="Digite seu email"
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            placeholder="Digite seu e-mail"
+            className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
         </div>
 
-        <div className="mb-6 relative">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
+        {/* Input Senha */}
+        <div className="relative">
+          <label className="block text-sm font-medium text-gray-700">
             Senha:
           </label>
           <input
             type={showPassword ? "text" : "password"}
+            id="password"
+            name="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             placeholder="Digite sua senha"
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
           <button
             type="button"
             onClick={toggleShowPassword}
-            className="absolute right-2 top-9"
+            className="absolute right-2 top-7"
           >
             {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
           </button>
         </div>
 
-        <div className="text-center mb-6">
+        {/* Link Register */}
+        <div className="text-start">
           <Link
             href="register"
             className="text-indigo-600 hover:text-indigo-800"
@@ -101,7 +118,8 @@ export default function LoginPage() {
           </Link>
         </div>
 
-        <div className="text-center mb-6">
+        {/* Link Forgot-Password */}
+        <div className="text-start">
           <Link
             href="forgot-password"
             className="text-indigo-600 hover:text-indigo-800"
@@ -110,21 +128,24 @@ export default function LoginPage() {
           </Link>
         </div>
 
-        {error && (
-          <div>
-            <p className="text-red-500 text-xs italic mb-4">{error}</p>
-          </div>
-        )}
-        <div className="flex items-center justify-between">
+        {/* Button Submit */}
+        <div>
           <button
             type="submit"
-            className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${
+            className={`w-full py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
               isLoading ? "opacity-50 cursor-not-allowed" : ""
             }`}
-            disabled={isLoading} // Desativa o botão enquanto está carregando
+            disabled={isLoading}
           >
             {isLoading ? "Carregando..." : "Entrar"}
           </button>
+
+          {/* Error */}
+          {error && (
+            <div>
+              <p className="text-red-500 text-xs italic mb-4">{error}</p>
+            </div>
+          )}
         </div>
       </form>
     </div>

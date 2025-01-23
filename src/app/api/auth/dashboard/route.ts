@@ -20,7 +20,7 @@ export async function GET(req: Request) {
 
   // Se o token não for fornecido, retornar um erro
   if (!token) {
-    return NextResponse.json({ error: "Token não fornecido" }, { status: 401 });
+    return NextResponse.json({ error: "Token não encontrado." }, { status: 401 });
   }
 
   // Verifica se o token é válido
@@ -29,11 +29,11 @@ export async function GET(req: Request) {
   // Se o token for inválido, retorna um erro
   if (!user) {
     return NextResponse.json(
-      { error: "Token inválido ou expirado" },
+      { error: "Token inválido ou expirado." },
       { status: 401 }
     );
   }
 
   // Se o token for válido, você pode retornar os dados do dashboard ou do usuário
-  return NextResponse.json({ message: "Bem-vindo ao Dashboard", user });
+  return NextResponse.json({ message: "Bem-vindo ao Dashboard.", user });
 }

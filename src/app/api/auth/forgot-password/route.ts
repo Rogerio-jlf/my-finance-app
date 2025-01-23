@@ -10,8 +10,8 @@ export async function POST(req: Request) {
   const userExists = await prisma.user.findUnique({ where: { email } });
   if (!userExists) {
     return NextResponse.json(
-      { error: "Se o e-mail existir, você receberá um link de redefinição." },
-      { status: 200 }
+      { error: "Email incorreto ou inválido. Usuário não encontrado." },
+      { status: 404 }
     );
   }
 
@@ -51,5 +51,5 @@ export async function POST(req: Request) {
   });
 
   // Retorna a resposta
-  return NextResponse.json({ message: "E-mail de recuperação enviado" });
+  return NextResponse.json({ message: "E-mail de recuperação enviado com sucesso!" });
 }

@@ -1,32 +1,59 @@
 "use client";
+import { useAuth } from "@/context/AuthContext";
+import Cookies from "js-cookie";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-export default function Header() {
-  const routerLogin = useRouter();
+const Header = () => {
+  const { isAuthenticated, setIsAuthenticated } = useAuth();
+  const router = useRouter();
 
-  function handleToLogin() {
-    routerLogin.push("/login");
-  }
+  const handleLogout = () => {
+    Cookies.remove("token");
+    setIsAuthenticated(false);
+    router.push("/login");
+  };
 
   return (
-    <nav className="fixed top-0 w-full flex items-center py-2 px-8 justify-between z-50 bg-slate-800 text-gray-300">
-      <Link
-        href="/"
-        className="uppercase font-bold text-md h-12 flex items-center"
-      >
-        MY FINANCE APP
-      </Link>
-      <div className="flex items-center gap-8">
-        <div>
-          <button
-            className="border rounded-md border-gray-400 px-3 py-2"
-            onClick={handleToLogin}
-          >
-            Sign In
-          </button>
+    <div>
+      <header className="bg-gray-800 p-4 shadow-md">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-white text-2xl font-bold">
+              <Link href="/">Finance App</Link>
+            </h1>
+          </div>
+          <div>
+            <nav className="flex space-x-4">
+              {isAuthenticated ? (
+                <div className="flex space-x-4">
+                  <button
+                    onClick={handleLogout}
+                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+                  >
+                    Logout
+                  </button>
+                  <button
+                    onClick={() => router.push("/profile")}
+                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
+                  >
+                    Profile
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => router.push("/login")}
+                  className="bg-green-500 text-black font-bold px-4 py-2 rounded hover:bg-green-600 transition duration-300"
+                >
+                  Login
+                </button>
+              )}
+            </nav>
+          </div>
         </div>
-      </div>
-    </nav>
+      </header>
+    </div>
   );
-}
+};
+
+export default Header;

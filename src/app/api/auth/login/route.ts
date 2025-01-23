@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     // Se o usuário não existir, retornar um erro
     if (!userExists) {
       return NextResponse.json(
-        { error: "Usuário ou senha incorretos." },
+        { error: "Usuário e/ou senha incorretos." },
         { status: 401 }
       );
     }
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     // Se a senha não for válida, retornar um erro
     if (!isPasswordValid) {
       return NextResponse.json(
-        { error: "Usuário ou senha incorretos." },
+        { error: "Usuário e/ou senha incorretos." },
         { status: 401 }
       );
     }
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     });
 
     // Retornar uma resposta com o token
-    const response = NextResponse.json({ message: "Login bem-sucedido!" });
+    const response = NextResponse.json({ message: "Login realizado com sucesso!" });
 
     // Definir o cookie com o token
     response.cookies.set("token", token, {
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error(error);
     return NextResponse.json(
-      { error: "Erro ao realizar login. Tente novamente mais tarde." },
+      { error: "Erro ao tentar realizar login. Verifique!" },
       { status: 500 }
     );
   }
