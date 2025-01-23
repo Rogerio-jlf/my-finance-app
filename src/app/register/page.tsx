@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 
 export default function UserForm() {
   // Estado para armazenar os dados do formulário
@@ -10,6 +12,7 @@ export default function UserForm() {
     email: "",
     password: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
 
   // Função para atualizar o estado do formulário
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -48,20 +51,24 @@ export default function UserForm() {
 
   const routerlogin = useRouter();
 
-  function handleToLogin(){
+  function handleToLogin() {
     routerlogin.push("/login");
+  }
+
+  function toggleShowPassword() {
+    setShowPassword(!showPassword);
   }
 
   // Componente de formulário de cadastro de usuário
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4   shadow-lg w-full   ">
-      <h2 className="text-2xl font-semibold text-center mb-6 text-gray-800">
-        Cadastro de Usuário
-      </h2>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 shadow-lg w-full">
       <form
         onSubmit={handleSubmit}
-        className="space-y-6 bg-white p-8 rounded-md shadow-md w-full max-w-sm"
+        className="space-y-6 bg-white p-8 rounded-md shadow-md w-full max-w-sm relative"
       >
+        <h2 className="text-2xl font-semibold text-center mb-6 text-gray-800">
+          Cadastro de Usuário
+        </h2>
         <div>
           <label
             htmlFor="username"
@@ -100,7 +107,7 @@ export default function UserForm() {
           />
         </div>
 
-        <div>
+        <div className="relative">
           <label
             htmlFor="password"
             className="block text-sm font-medium text-gray-700"
@@ -108,7 +115,7 @@ export default function UserForm() {
             Senha
           </label>
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             id="password"
             name="password"
             value={formData.password}
@@ -117,6 +124,13 @@ export default function UserForm() {
             placeholder="Digite sua senha"
             className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
+          <button
+            type="button"
+            onClick={toggleShowPassword}
+            className="absolute right-2 top-9"
+          >
+            {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+          </button>
         </div>
 
         <div className="text-center">
@@ -124,14 +138,15 @@ export default function UserForm() {
             Já tem uma conta? Faça login
           </Link>
         </div>
-
-        <button
-          type="submit"
-          onClick={handleToLogin}
-          className="w-full py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        >
-          Cadastrar
-        </button>
+        <div>
+          <button
+            type="submit"
+            onClick={handleToLogin}
+            className="w-full py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            Cadastrar
+          </button>
+        </div>
       </form>
     </div>
   );

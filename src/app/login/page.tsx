@@ -2,12 +2,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   // função para lidar com o envio do formulário
@@ -42,13 +45,18 @@ export default function LoginPage() {
     }
   }
 
+  // Função para alternar a visibilidade da senha
+  function toggleShowPassword() {
+    setShowPassword(!showPassword);
+  }
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <h1 className="text-3xl font-bold mb-6">Login</h1>
       <form
         onSubmit={handleLogin}
-        className="bg-white p-8 rounded shadow-md w-full max-w-sm"
+        className="bg-white p-8 rounded shadow-md w-full max-w-sm relative"
       >
+        <h1 className="text-3xl font-bold mb-6">Login</h1>
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2">
             Email:
@@ -63,18 +71,25 @@ export default function LoginPage() {
           />
         </div>
 
-        <div className="mb-6">
+        <div className="mb-6 relative">
           <label className="block text-gray-700 text-sm font-bold mb-2">
             Senha:
           </label>
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             placeholder="Digite sua senha"
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           />
+          <button
+            type="button"
+            onClick={toggleShowPassword}
+            className="absolute right-2 top-9"
+          >
+            {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+          </button>
         </div>
 
         <div className="text-center mb-6">
@@ -86,8 +101,20 @@ export default function LoginPage() {
           </Link>
         </div>
 
-        {error && <p className="text-red-500 text-xs italic mb-4">{error}</p>}
+        <div className="text-center mb-6">
+          <Link
+            href="forgot-password"
+            className="text-indigo-600 hover:text-indigo-800"
+          >
+            Esqueceu sua senha?
+          </Link>
+        </div>
 
+        {error && (
+          <div>
+            <p className="text-red-500 text-xs italic mb-4">{error}</p>
+          </div>
+        )}
         <div className="flex items-center justify-between">
           <button
             type="submit"
