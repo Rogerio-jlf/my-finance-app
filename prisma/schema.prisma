@@ -35,6 +35,9 @@ model PasswordResetToken {
   expiresAt DateTime
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@map("password_reset_tokens")
 }
 
 // ----------------------------------------------------------------------------
@@ -56,7 +59,7 @@ model PasswordResetToken {
 // model Income {
 //   id                Int      @id @default(autoincrement())
 //   description       String
-//   amount            Float
+//   amount            Decimal
 //   date              DateTime @default(now())
 //   category_id       Int // Referência à tabela de categorias
 //   receipt_method_id Int // Referência à tabela de formas de recebimento
@@ -86,20 +89,20 @@ model PaymentMethod {
 }
 
 // TABLE RECURRENCE - EXPENSE
-model RecurringExpense {
+model RecurrenceExpense {
   id                  Int       @id @default(autoincrement())
   expense_id          Int // Referência para a tabela Expense
   recurrence_month    Int // Mês da recorrência (1-12)
   recurrence_year     Int // Ano da recorrência
   recurrence_due_date DateTime // Data de vencimento
-  recurrence_amount   Float // Valor da despesa fixa para o mês
+  recurrence_amount   Decimal // Valor da despesa fixa para o mês
   created_at          DateTime? @default(now())
   updated_at          DateTime? @default(now())
 
   // Relacionamento com a tabela de despesas
-  expense Expense @relation("ExpenseRecurring", fields: [expense_id], references: [id], onDelete: Cascade)
+  expense Expense @relation("ExpenseRecurrence", fields: [expense_id], references: [id], onDelete: Cascade)
 
-  @@map("recurring_expenses")
+  @@map("recurrence_expenses")
 }
 
 // TABLE INSTALLMENT - EXPENSE 
@@ -108,7 +111,7 @@ model InstallmentExpense {
   expense_id           Int // Referência para a tabela ExpenseCreditCard
   installment_number   Int // Número da parcela
   installment_due_date DateTime  @default(now()) // Data de vencimento da parcela
-  installment_amount   Float // Valor da parcela
+  installment_amount   Decimal // Valor da parcela
   created_at           DateTime? @default(now())
   updated_at           DateTime? @default(now())
 
@@ -122,11 +125,11 @@ model InstallmentExpense {
 model Expense {
   id                  Int       @id @default(autoincrement())
   description         String
-  amount              Float
+  amount              Decimal
   due_date            DateTime  @default(now())
   expense_category_id Int // Referência à tabela de categorias
   payment_method_id   Int // Referência à tabela de cartão de crédito
-  recurrence_id       Int // Referência à tabela de tipos de recorrência
+  recurrence_type_id  Int // Referência à tabela de tipos de recorrência
   installments        Int? // Número de parcelas (para despesas parceladas)
   status              Boolean?  @default(false)
   created_at          DateTime? @default(now())
@@ -139,10 +142,10 @@ model Expense {
   paymentMethod PaymentMethod @relation("ExpensePaymentMethod", fields: [payment_method_id], references: [id])
 
   // Relacionamento com a tabela de tipos de recorrência
-  recurrenceType RecurrenceType @relation("ExpenseRecurrenceType", fields: [recurrence_id], references: [id])
+  recurrenceType RecurrenceType @relation("ExpenseRecurrenceType", fields: [recurrence_type_id], references: [id])
 
   // Relacionamento com a tabela de recorrências
-  recurringExpense RecurringExpense[] @relation("ExpenseRecurring")
+  recurrenceExpense RecurrenceExpense[] @relation("ExpenseRecurrence")
 
   // Relacionamento com a tabela de parcelas
   installmentExpense InstallmentExpense[] @relation("ExpenseInstallment")
@@ -205,7 +208,7 @@ model CreditCard {
 model CreditCardExpense {
   id                  Int       @id @default(autoincrement())
   description         String
-  amount              Float
+  amount              Decimal
   date                DateTime  @default(now())
   expense_category_id Int // Referência à tabela de categorias
   credit_card_id      Int // Referência à tabela de cartão de crédito
@@ -239,7 +242,7 @@ model Installment {
   credit_card_expense_id Int // Referência para a tabela ExpenseCreditCard
   installment_number     Int // Número da parcela
   installment_due_date   DateTime // Data de vencimento da parcela
-  installment_amount     Float // Valor da parcela
+  installment_amount     Decimal // Valor da parcela
   created_at             DateTime? @default(now())
   updated_at             DateTime? @default(now())
 
@@ -256,7 +259,7 @@ model RecurrenceCreditCardExpense {
   recurrence_month       Int // Mês da recorrência (1-12)
   recurrence_year        Int // Ano da recorrência
   recurrence_due_date    DateTime // Data de vencimento
-  recurrence_amount      Float // Valor da despesa fixa para o mês
+  recurrence_amount      Decimal // Valor da despesa fixa para o mês
   created_at             DateTime? @default(now())
   updated_at             DateTime? @default(now())
 

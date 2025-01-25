@@ -53,4 +53,22 @@ Content-Type: application/json
 GET http://localhost:3001/api/paymentMethod HTTP/1.1
 ###
 
+# EXPENSE
+POST http://localhost:3001/api/expense
+Content-Type: application/json
+
+{
+  "description": "Teste não recorrente",
+  "amount": 100.00,
+  "due_date": "2021-12-31",
+  "expense_category_id": 12,
+  "payment_method_id": 1,
+  "recurrence_type_id": 3,
+  "installments": 4
+}
+###
+
+GET http://localhost:3001/api/expense HTTP/1.1
+###
+
 
