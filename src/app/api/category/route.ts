@@ -81,7 +81,7 @@ export async function GET() {
   } catch (error) {
     console.error("Erro ao tentar buscar categorias:", error);
     return NextResponse.json(
-      { error: "Erro ao tentar buscar categorias." },
+      { error: "Erro interno no servidor." },
       { status: 500 }
     );
   }

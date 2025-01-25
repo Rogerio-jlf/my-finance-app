@@ -5,19 +5,28 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DropDown from "./DropDown";
 import { LogOut, Menu, Settings, UserPen } from "lucide-react";
+import { useState } from "react";
 
 // Componente de cabeçalho da aplicação
 export default function Header() {
   const { isAuthenticated, setIsAuthenticated } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   // Lida com o logout do usuário e remove o token do cookie
   function handleLogout() {
+    setIsLoading(true);
     Cookies.remove("token");
     setIsAuthenticated(false);
-    router.push("/login");
+    setError("Saindo...");
+    setTimeout(() => {
+      setIsLoading(false);
+      router.push("/login");
+    }, 1000);
   }
 
+  // Renderiza o cabeçalho
   return (
     <div>
       <header className="bg-gray-800 p-4 shadow-md">
@@ -38,16 +47,12 @@ export default function Header() {
                   <button
                     onClick={handleLogout}
                     className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+                    disabled={isLoading}
                   >
-                    Logout
-                  </button>
-                  <button
-                    onClick={() => router.push("/profile")}
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
-                  >
-                    Profile
+                    {isLoading ? "Saindo..." : "Logout"}
                   </button>
 
+                  {/* DropDown */}
                   <DropDown
                     trigger={
                       <button className="flex justify-between gap-2  items-center bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition duration-300">
@@ -68,11 +73,12 @@ export default function Header() {
                       },
                       {
                         label: "Sair",
-                        onClick: () => router.push("/"),
+                        onClick: () => handleLogout(),
                         icon: <LogOut className="h-4 w-4" />,
                       },
                     ]}
                   />
+                  {error ? <p className="text-red-500 mt-4">{error}</p> : ""}
                 </div>
               ) : (
                 <button

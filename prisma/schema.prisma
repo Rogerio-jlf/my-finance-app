@@ -13,6 +13,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ----------------------------------------------------------------------------
 // TABLE - USER
 model User {
   id         Int       @id @default(autoincrement())
@@ -25,6 +26,8 @@ model User {
   @@map("users")
 }
 
+// ----------------------------------------------------------------------------
+// TABLE - PASSWORD RESET TOKEN
 model PasswordResetToken {
   id        Int      @id @default(autoincrement())
   email     String   @unique
@@ -33,6 +36,8 @@ model PasswordResetToken {
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
 }
+
+// ----------------------------------------------------------------------------
 
 // // TABLE -  RECEIPT METHOD
 // model ReceiptMethod {
