@@ -2,9 +2,17 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 
+// Função de rota para redefinir a senha
 export async function POST(req: Request) {
-  // Recebe o token e a nova senha
   const { token, newPassword } = await req.json();
+
+  // Verifica se o campo obrigatório foi preenchido
+  if(!newPassword) {
+    return NextResponse.json(
+      { error: "Todos os campos são obrigatórios." },
+      { status: 400 }
+    );
+  }
 
   // Busca o token no banco de dados
   const resetToken = await prisma.passwordResetToken.findUnique({
@@ -36,6 +44,13 @@ export async function POST(req: Request) {
     where: { token },
     data: { used: true },
   });
+
+  // // Remove todos os tokens antigos do usuário
+  // await prisma.passwordResetToken.deleteMany({
+  //   where: {
+  //     token,
+  //   },
+  // });
 
   // Retorna uma resposta de sucesso
   return NextResponse.json({ message: "Senha redefinida com sucesso!" });

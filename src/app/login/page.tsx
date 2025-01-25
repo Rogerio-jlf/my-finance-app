@@ -1,22 +1,23 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import { useAuth } from "@/context/AuthContext";
 
+// Componente de login
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { isAuthenticated, setIsAuthenticated } = useAuth();
   const router = useRouter();
 
-  // função para lidar com o envio do formulário
+  // Lida com o envio do formulário de login
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setIsLoading(true);
@@ -32,7 +33,7 @@ export default function LoginPage() {
         credentials: "include", // Inclui cookies enviados pelo servidor
       });
 
-      // Verifica se a resposta da API foi bem-sucedida
+      // Verifica se a resposta da API foi bem-sucedida ou não
       if (response.ok) {
         setEmail("");
         setPassword("");
@@ -40,20 +41,21 @@ export default function LoginPage() {
         router.push("/dashboard");
       } else {
         const { error } = await response.json();
-        setError(error || "Falha na autenticação.");
+        setErrorMessage(error || "Falha na autenticação.");
       }
     } catch {
-      setError("Ocorreu um erro inesperado.");
+      setErrorMessage("Ocorreu um erro inesperado.");
     } finally {
       setIsLoading(false);
     }
   }
 
-  // Função para alternar a visibilidade da senha
+  // Alterna a visibilidade da senha
   function toggleShowPassword() {
     setShowPassword(!showPassword);
   }
 
+  // Renderiza o formulário de login
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 shadow-lg w-full">
       <form
@@ -111,7 +113,7 @@ export default function LoginPage() {
         {/* Link Register */}
         <div className="text-start">
           <Link
-            href="register"
+            href="user-register"
             className="text-indigo-600 hover:text-indigo-800"
           >
             Ainda não tem uma conta? Registre-se
@@ -140,10 +142,10 @@ export default function LoginPage() {
             {isLoading ? "Carregando..." : "Entrar"}
           </button>
 
-          {/* Error */}
-          {error && (
+          {/* Error Geral */}
+          {errorMessage && (
             <div>
-              <p className="text-red-500 text-xs italic mb-4">{error}</p>
+              <p className="text-red-500 text-xs italic mb-4">{errorMessage}</p>
             </div>
           )}
         </div>

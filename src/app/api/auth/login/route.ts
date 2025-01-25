@@ -7,15 +7,22 @@ const JWT_SECRET = process.env.JWT_SECRET || "defaultSecretKey";
 
 export async function POST(request: Request) {
   try {
-    // Obter email e senha do corpo da requisição
+    // Desestruturar o email e a senha do corpo da requisição
     const { email, password } = await request.json();
 
-    // Verificar se o usuário existe no banco de dados
+    if(!email || !password) {
+      return NextResponse.json(
+        { error: "Os campos e-mail e senha são obrigatórios." },
+        { status: 400 }
+      );
+    }
+
+    // Verifica se o usuário existe no banco de dados
     const userExists = await prisma.user.findUnique({
       where: { email },
     });
 
-    // Se o usuário não existir, retornar um erro
+    // Se o usuário não existir, retorna um erro 
     if (!userExists) {
       return NextResponse.json(
         { error: "Usuário e/ou senha incorretos." },
@@ -23,10 +30,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Comparar a senha fornecida com a senha armazenada no banco de dados
+    // Compara a senha fornecida com a senha armazenada no banco de dados
     const isPasswordValid = await bcrypt.compare(password, userExists.password);
 
-    // Se a senha não for válida, retornar um erro
+    // Se a senha não for válida, retorna um erro
     if (!isPasswordValid) {
       return NextResponse.json(
         { error: "Usuário e/ou senha incorretos." },
@@ -34,15 +41,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // Gerar um token JWT com o ID do usuário
+    // Gera um token JWT para o usuário
     const token = jwt.sign({ userId: userExists.id }, JWT_SECRET, {
       expiresIn: "7d",
     });
 
-    // Retornar uma resposta com o token
+    // Retorna uma resposta com o token
     const response = NextResponse.json({ message: "Login realizado com sucesso!" });
 
-    // Definir o cookie com o token
+    // Defini o cookie e salva o token nele
     response.cookies.set("token", token, {
       httpOnly: false, // Permite acesso via JavaScript (não recomendado) - use true em produção
       secure: process.env.NODE_ENV === "production", // Apenas HTTPS em produção
@@ -51,6 +58,7 @@ export async function POST(request: Request) {
       maxAge: 7 * 24 * 60 * 60, // Expira em 7 dias
     });
 
+    // Retorna a resposta com o token
     return response;
   } catch (error) {
     console.error(error);

@@ -1,31 +1,31 @@
 "use client";
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 
-export default function UserForm() {
-  // Estado para armazenar os dados do formulário
+// Componente de cadastro de usuário
+export default function UserRegisterPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [errorEmail, setErrorEmail] = useState("");
-  const [errorPassword, setErrorPassword] = useState("");
-  const [error, setError] = useState("");
+  const [errorEmailMessage, setErrorEmailMessage] = useState("");
+  const [errorPasswordMessage, setErrorPasswordMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
 
-  // Função para atualizar o estado do formulário
+  // Lida com a mudança dos campos do formulário
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     // Limpa os erros de validação
-    setErrorEmail("");
-    setErrorPassword("");
-    setError("");
+    setErrorEmailMessage("");
+    setErrorPasswordMessage("");
+    setErrorMessage("");
 
+    // Atualiza os valores do formulário com os dados do input 
     const { name, value } = e.target;
     setFormData((prevState) => ({
       ...prevState,
@@ -33,17 +33,25 @@ export default function UserForm() {
     }));
   }
 
-  // Função para alternar a visibilidade da senha
+  // Alterna a visibilidade da senha
   function toggleShowPassword() {
     setShowPassword(!showPassword);
   }
 
+  // Torna a primeira letra de cada palavra maiúscula
   function capitalizeWords(e: React.ChangeEvent<HTMLInputElement>) {
     const words = e.target.value.split(" ");
+    const lowerCaseWords = ["e", "da", "das", "de", "di", "do", "dos"];
+
     for (let i = 0; i < words.length; i++) {
-      words[i] =
-        words[i].charAt(0).toUpperCase() + words[i].slice(1).toLowerCase();
+      if (lowerCaseWords.includes(words[i].toLowerCase())) {
+        words[i] = words[i].toLowerCase();
+      } else {
+        words[i] =
+          words[i].charAt(0).toUpperCase() + words[i].slice(1).toLowerCase();
+      }
     }
+
     const capitalized = words.join(" ");
     setFormData((prevState) => ({
       ...prevState,
@@ -51,34 +59,39 @@ export default function UserForm() {
     }));
   }
 
+  // Valida o formato do e-mail
   function validateEmail(email: string) {
     const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
     return regex.test(email);
   }
 
+  // Valida o formato da senha
   function validatePassword(password: string) {
     const regex = /^(?=.*[A-Z])(?=.*[!@#$%^&*])(?=.{8,})/;
     return regex.test(password);
   }
 
-  // Função para lidar com o envio do formulário
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  // Lida com o envio do formulário de cadastro de usuário
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
+    // Valida o formato do e-mail
     if (!validateEmail(formData.email)) {
-      setErrorEmail("E-mail inválido. Digite um e-mail válido.");
+      setErrorEmailMessage("E-mail inválido. Digite um e-mail válido.");
       return;
     }
 
+    // Valida o formato da senha
     if (!validatePassword(formData.password)) {
-      setErrorPassword(
-        "A senha deve conter no mínimo 8 caracteres, incluindo pelo menos uma letra maiúscula e um caractere especial."
+      setErrorPasswordMessage(
+        "A senha deve conter no mínimo 8 caracteres. Deve conter pelo menos uma letra maiúscula e um caractere especial."
       );
       return;
     }
 
+    // Envia os dados do formulário para a API
     try {
-      const response = await fetch("/api/users", {
+      const response = await fetch("/api/userRegister", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -86,21 +99,22 @@ export default function UserForm() {
         body: JSON.stringify(formData),
       });
 
+      // Armaneza a resposta da API
       const data = await response.json();
-      console.log(data);
 
+      // Verifica se o usuário foi criado com sucesso ou não
       if (response.ok) {
         alert("Usuário criado com sucesso!");
         router.push("/login");
       } else {
-        setError(data.error);
+        setErrorMessage(data.error);
       }
     } catch (error) {
-      console.error("Erro ao criar usuário:", error);
+      console.error("Erro ao tentar criar usuário:", error);
     }
-  };
+  }
 
-  // Componente de formulário de cadastro de usuário
+  // Renderiza o formulário de cadastro de usuário
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 shadow-lg w-full">
       <form
@@ -153,9 +167,11 @@ export default function UserForm() {
           />
 
           {/* Error Email */}
-          {errorEmail && (
+          {errorEmailMessage && (
             <div>
-              <p className="text-red-500 text-xs italic mt-4">{errorEmail}</p>
+              <p className="text-red-500 text-xs italic mt-4">
+                {errorEmailMessage}
+              </p>
             </div>
           )}
         </div>
@@ -185,10 +201,10 @@ export default function UserForm() {
           </button>
 
           {/* Error Password */}
-          {errorPassword && (
+          {errorPasswordMessage && (
             <div>
               <p className="text-red-500 text-xs italic mt-4">
-                {errorPassword}
+                {errorPasswordMessage}
               </p>
             </div>
           )}
@@ -200,6 +216,7 @@ export default function UserForm() {
           </Link>
         </div>
 
+        {/* Button Submit */}
         <div>
           <button
             type="submit"
@@ -208,10 +225,10 @@ export default function UserForm() {
             Cadastrar
           </button>
 
-          {/* Error */}
-          {error && (
+          {/* Error Geral*/}
+          {errorMessage && (
             <div>
-              <p className="text-red-500 text-xs italic mt-4">{error}</p>
+              <p className="text-red-500 text-sm italic mt-4">{errorMessage}</p>
             </div>
           )}
         </div>

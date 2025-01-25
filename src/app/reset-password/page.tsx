@@ -34,7 +34,7 @@ export default function ResetPasswordPage() {
     }
 
     // Enviar a nova senha para a API de redefinição de senha
-    const response = await fetch("/api/auth/reset-password", {
+    const response = await fetch("/api/auth/resetPassword", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token, newPassword }),

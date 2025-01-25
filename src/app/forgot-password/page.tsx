@@ -2,33 +2,40 @@
 import Link from "next/link";
 import { useState } from "react";
 
+// Componente da página de recuperação de senha
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Função para enviar o e-mail de recuperação
+  // Lida com o envio do formulário de recuperação de senha
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setIsLoading(true);
 
     // Envia a requisição para a API de recuperação de senha
-    const response = await fetch("/api/auth/forgot-password", {
+    const response = await fetch("/api/auth/forgotPassword", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
     });
 
-    // Verifica se a requisição foi bem-sucedida
+    // Verifica se a requisição foi bem-sucedida ou não
     if (response.ok) {
       setSuccessMessage(
         "E-mail de recuperação enviado com sucesso. Verifique sua caixa de entrada."
       );
+      setErrorMessage("");
     } else {
       const error = await response.json();
       setErrorMessage(error.error);
+      setSuccessMessage("");
     }
+    setIsLoading(false);
   }
 
+  // Renderiza o formulário de recuperação de senha
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 shadow-lg w-full">
       <form
@@ -61,14 +68,14 @@ export default function ForgotPasswordPage() {
 
         {/* Link Login */}
         <div className="text-start">
-          <Link href="/login" className="text-indigo-600 hover:text-indigo-800">
+          <Link href="/login" className="text-blue-400 hover:text-red-500 italic font-bold">
             Voltar para o login
           </Link>
         </div>
 
         {/* MSG */}
         <div>
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-xs text-gray-500 mb-4">
             Será enviado um e-mail com um link para redefinir sua senha.
           </p>
         </div>
@@ -78,19 +85,19 @@ export default function ForgotPasswordPage() {
           <button
             type="submit"
             className="w-full py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            disabled={isLoading}
           >
-            Enviar
+            {isLoading ? "Enviando..." : "Enviar"}
           </button>
-
-          {/* MSG */}
         </div>
+
         {errorMessage ? (
           <div>
             <p className="text-red-500 text-xs italic mt-4">{errorMessage}</p>
           </div>
         ) : successMessage ? (
           <div>
-            <p className="text-green-500 text-xs italic mt-4">
+            <p className="text-green-500 text-sm font-bold mt-4">
               {successMessage}
             </p>
           </div>
