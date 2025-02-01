@@ -58,17 +58,35 @@ POST http://localhost:3001/api/expense
 Content-Type: application/json
 
 {
-  "description": "Teste não recorrente",
-  "amount": 100.00,
-  "due_date": "2021-12-31",
-  "expense_category_id": 12,
+  "description": "Supermercado",
+  "amount": 10.00,
+  "entry_date": "2025-03-10",
+  "expense_category_id": 11,
   "payment_method_id": 1,
   "recurrence_type_id": 3,
-  "installments": 4
+  "due_date": "2025-03-10",
+  "installment": 2
 }
 ###
 
 GET http://localhost:3001/api/expense HTTP/1.1
 ###
+
+DELETE http://localhost:3001/api/expense/35 HTTP/1.1
+###
+
+PUT http://localhost:3001/api/expense/88 HTTP/1.1
+Content-Type: application/json
+
+{
+  "description": "De parcelada para parcelada",
+  "amount": 60.00,
+  "entry_date": "2025-01-30",
+  "expense_category_id": 12,
+  "payment_method_id": 2,
+  "recurrence_type_id": 3,
+  "due_date": "2025-01-10",
+  "installment": 3
+}
 
 

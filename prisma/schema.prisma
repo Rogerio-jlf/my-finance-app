@@ -126,14 +126,15 @@ model Expense {
   id                  Int       @id @default(autoincrement())
   description         String
   amount              Decimal
-  due_date            DateTime  @default(now())
+  entry_date          DateTime
   expense_category_id Int // Referência à tabela de categorias
   payment_method_id   Int // Referência à tabela de cartão de crédito
   recurrence_type_id  Int // Referência à tabela de tipos de recorrência
-  installments        Int? // Número de parcelas (para despesas parceladas)
+  due_date            DateTime?
+  installments        Int?
   status              Boolean?  @default(false)
-  created_at          DateTime? @default(now())
-  updated_at          DateTime? @default(now())
+  created_at          DateTime?
+  updated_at          DateTime?
 
   // Relacionamento com a tabela de categorias
   expenseCategory ExpenseCategory @relation("ExpenseCategory", fields: [expense_category_id], references: [id])
