@@ -6,13 +6,34 @@ import {
   IPaymentMethod,
   IRecurrenceType,
 } from "@/types/interface";
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  FormControl,
+  InputLabel,
+} from "@mui/material";
 import { useEffect, useState } from "react";
+
+import MenuItem from "@mui/material/MenuItem";
+import Select, { SelectChangeEvent } from "@mui/material/Select";
+import TextField from "@mui/material/TextField";
+
+import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import "dayjs/locale/pt-br";
+import dayjs from "dayjs";
 
 interface IExpensePageProps {
   onClose: () => void;
 }
 
-const ExpensePage: React.FC<IExpensePageProps>= () => {
+const ExpensePage: React.FC<IExpensePageProps> = () => {
   // Estado para armazenar os dados do formulário
   const [formData, setFormData] = useState<IExpenseProps>({
     id: 0,
@@ -34,9 +55,9 @@ const ExpensePage: React.FC<IExpensePageProps>= () => {
       id: 0,
       name: "",
     },
-    due_date_recurrence: "",
+    due_date: "",
     recurrenceExpense: [],
-    installment: 0,
+    installment: 1,
     installmentExpense: [],
     status: false,
   });
@@ -46,15 +67,25 @@ const ExpensePage: React.FC<IExpensePageProps>= () => {
   const [paymentMethods, setPaymentMethods] = useState<IPaymentMethod[]>([]);
   const [recurrenceTypes, setRecurrenceTypes] = useState<IRecurrenceType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [formattedAmount, setFormattedAmount] = useState("");
+  const [openRegisterDialogSuccess, setOpenRegisterDialogSuccess] =
+    useState(false);
 
   // Função para lidar com a mudança dos dados do formulário
   function handleChangeFormData(
-    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    event:
+      | React.ChangeEvent<
+          HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+        >
+      | SelectChangeEvent<number>
   ) {
+    // Verifica se o evento é de um campo de seleção
     const { name, value } = event.target;
+    // Atualiza o estado do formulário com os novos dados
     setFormData((prevState) => ({
       ...prevState,
       [name]:
+        name === "description" ||
         name === "amount" ||
         name === "expense_category_id" ||
         name === "payment_method_id" ||
@@ -65,6 +96,7 @@ const ExpensePage: React.FC<IExpensePageProps>= () => {
     }));
   }
 
+  // Função para tornar a 1º letra da 1º palavra em maiúscula
   function firstLetterFirstWordCapitalized(
     event: React.ChangeEvent<HTMLInputElement>
   ) {
@@ -77,15 +109,16 @@ const ExpensePage: React.FC<IExpensePageProps>= () => {
 
   // Função para lidar com o envio dos dados do formulário
   async function handleSubmitFormData(event: React.FormEvent<HTMLFormElement>) {
+    // Previne o comportamento padrão do formulário
     event.preventDefault();
 
+    // Verifica se o formulário está em processo de envio
     setIsLoading(true);
 
     // Simula uma requisição assíncrona
     setTimeout(async () => {
       // Tenta criar uma nova despesa no banco de dados
       try {
-        console.log("Dados enviados:", formData);
         const response = await fetch("/api/expense", {
           method: "POST",
           headers: {
@@ -102,21 +135,23 @@ const ExpensePage: React.FC<IExpensePageProps>= () => {
           ...formData,
           description: "",
           amount: 0,
-          due_date: "",
+          entry_date: "",
           expense_category_id: 0,
           payment_method_id: 0,
           recurrence_type_id: 0,
-          due_date_recurrence: "",
-          installment: 0,
+          due_date: "",
+          installment: 1,
           status: false,
         }));
+
+        setFormattedAmount("");
 
         // Se a resposta for bem-sucedida, adiciona a nova despesa ao estado de despesas
         if (response.ok) {
           fetchCategories();
           fetchPaymentMethods();
           fetchRecurrenceTypes();
-          // fetchExpenses();
+          handleRegisterDialogSuccess();
         } else {
           alert(data.error);
         }
@@ -128,7 +163,7 @@ const ExpensePage: React.FC<IExpensePageProps>= () => {
     }, 2000);
   }
 
-  // Função para buscar as categorias de despesa no banco de dados
+  // Função para buscar as categorias no banco de dados
   async function fetchCategories() {
     try {
       const response = await fetch("/api/category");
@@ -139,6 +174,7 @@ const ExpensePage: React.FC<IExpensePageProps>= () => {
     }
   }
 
+  // Função para buscar os métodos de pagamento no banco de dados
   async function fetchPaymentMethods() {
     try {
       const response = await fetch("/api/paymentMethod");
@@ -149,6 +185,7 @@ const ExpensePage: React.FC<IExpensePageProps>= () => {
     }
   }
 
+  // Função para buscar os tipos de recorrência no banco de dados
   async function fetchRecurrenceTypes() {
     try {
       const response = await fetch("/api/recurrenceType");
@@ -159,219 +196,296 @@ const ExpensePage: React.FC<IExpensePageProps>= () => {
     }
   }
 
-  // async function fetchExpenses() {
-  //   try {
-  //     const response = await fetch("/api/expense");
-  //     const data = await response.json();
-
-  //     if (Array.isArray(data.expenses)) {
-  //       setExpenses(data.expenses);
-  //     } else {
-  //       console.error("Erro: dados retornados não são um array");
-  //     }
-  //   } catch (error) {
-  //     console.error("Erro ao buscar despesas:", error);
-  //   }
-  // }
-
+  // Efeitos colaterais
   useEffect(() => {
     fetchCategories();
     fetchPaymentMethods();
     fetchRecurrenceTypes();
-    // fetchExpenses();
   }, []);
+
+  // Função para formatar o valor da despesa em moeda brasileira
+  function handleFormatCurrency(value: number): string {
+    return value.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+  }
+
+  // Função para lidar com a mudança do valor da despesa no formulário
+  function handleChangeAmount(event: React.ChangeEvent<HTMLInputElement>) {
+    const rawValue = event.target.value.replace(/\D/g, "");
+    const numericValue = Number(rawValue) / 100;
+
+    setFormData((prev) => ({
+      ...prev,
+      amount: numericValue,
+    }));
+
+    setFormattedAmount(handleFormatCurrency(numericValue));
+  }
+
+  // Função para exibir o diálogo de sucesso após o cadastro da despesa
+  function handleRegisterDialogSuccess() {
+    setOpenRegisterDialogSuccess(true);
+  }
 
   // Renderização do componente de despesas
   return (
-    <div className="p-4">
-      {/* h1 */}
-      <h1 className="text-2xl font-bold mb-4">Despesas</h1>
+    <div className="mt-20 p-10 max-w-2xl mx-auto bg-gradient-to-r from-teal-100 to-teal-50 shadow-2xl rounded-3xl">
+      {/* TÍTULO */}
+      <h1 className="text-4xl font-extrabold text-gray-800 mb-10 text-center">
+        Despesas
+      </h1>
 
-      <form onSubmit={handleSubmitFormData} className="space-y-4">
-        {/* description */}
-        <label className="block">
-          Descrição:
-          <input
-            type="text"
-            name="description"
-            value={formData.description}
-            onChange={(e) => {
-              handleChangeFormData(e);
-              firstLetterFirstWordCapitalized(e);
-            }}
-            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-          />
-        </label>
-        {/* amount */}
-        <label className="block">
-          Valor:
-          <input
-            type="number"
-            name="amount"
-            value={formData.amount}
-            onChange={handleChangeFormData}
-            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-          />
-        </label>
-        {/* due_date */}
-        <label className="block">
-          Data de entrada:
-          <input
-            type="date"
-            name="due_date"
-            value={
-              formData.entry_date instanceof Date
-                ? formData.entry_date.toISOString().split("T")[0]
-                : formData.entry_date
-            }
-            onChange={handleChangeFormData}
-            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-          />
-        </label>
+      {/* FORMULÁRIO */}
+      <form onSubmit={handleSubmitFormData} className="space-y-8">
+        {/* DESCRIÇÃO */}
+        <TextField
+          type="text"
+          name="description"
+          variant="outlined"
+          label="Descrição"
+          value={formData.description}
+          onChange={firstLetterFirstWordCapitalized}
+          className="w-full"
+        />
 
-        {/* expense_category_id */}
-        <label className="block">
-          Categoria:
-          <select
+        {/* VALOR */}
+        <TextField
+          type="text"
+          name="amount"
+          variant="outlined"
+          label="Valor"
+          value={formattedAmount}
+          onChange={handleChangeAmount}
+          className="w-full"
+        />
+
+        {/* DATA ENTRADA */}
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
+          <DemoContainer components={["DatePicker"]}>
+            <DatePicker
+              value={
+                formData.entry_date
+                  ? dayjs(formData.entry_date, "DD/MM/YYYY")
+                  : null
+              }
+              onChange={(newValue) => {
+                setFormData((prevState) => ({
+                  ...prevState,
+                  entry_date: newValue ? newValue.format("DD/MM/YYYY") : "",
+                }));
+              }}
+              format="DD/MM/YYYY"
+              className="w-full"
+              slotProps={{
+                textField: {
+                  placeholder: "Data de Entrada",
+                },
+                popper: {
+                  className: "z-50",
+                },
+                calendarHeader: {
+                  className: "bg-black text-white font-bold p-2 rounded-lg mb-2 shadow-3xl z-50 text-center w-full text-lg transition duration-200 ease-in-out",
+                },
+                nextIconButton: {
+                  className: "text-white",
+                },
+                previousIconButton: {
+                  className: "text-white",
+                },
+                desktopPaper: {
+                  className: "rounded-lg p-3 z-50 shadow-3xl",
+                },
+                monthButton: {
+                  className: "hover:bg-teal-600 rounded-lg transition duration-200 ease-in-out cursor-pointer p-2 text-center text-lg",
+                },
+                day: {
+                  className:
+                    "hover:bg-teal-600 rounded-lg transition duration-200 ease-in-out cursor-pointer p-2 text-center text-lg",
+                },
+              }}
+            />
+          </DemoContainer>
+        </LocalizationProvider>
+
+        {/* CATEGORIA */}
+        <FormControl fullWidth>
+          <InputLabel id="demo-simple-select-label">Categoria</InputLabel>
+          <Select
             name="expense_category_id"
-            value={formData.expense_category_id}
+            labelId="demo-simple-select-label"
+            id="demo-simple-select"
+            label="Categoria"
+            value={formData.expense_category_id || ""}
             onChange={handleChangeFormData}
             onClick={fetchCategories}
-            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+            className="w-full"
           >
-            <option value=""></option>
             {categories.map((category) => (
-              <option key={category.id} value={category.id}>
+              <MenuItem key={category.id} value={category.id}>
                 {category.name}
-              </option>
+              </MenuItem>
             ))}
-          </select>
-        </label>
+          </Select>
+        </FormControl>
 
-        {/* payment_method_id */}
-        <label className="block">
-          Método de pagamento:
-          <select
+        {/* FORMA PAGAMENTO */}
+        <FormControl fullWidth>
+          <InputLabel id="demo-simple-select-label">
+            Forma de Pagamento
+          </InputLabel>
+          <Select
             name="payment_method_id"
-            value={formData.payment_method_id}
+            labelId="demo-simple-select-label"
+            id="demo-simple-select"
+            label="Selecione uma Forma de Pagamento"
+            value={formData.payment_method_id || ""}
             onChange={handleChangeFormData}
             onClick={fetchPaymentMethods}
-            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+            className="w-full"
           >
-            <option value=""></option>
             {paymentMethods.map((paymentMethod) => (
-              <option key={paymentMethod.id} value={paymentMethod.id}>
+              <MenuItem key={paymentMethod.id} value={paymentMethod.id}>
                 {paymentMethod.name}
-              </option>
+              </MenuItem>
             ))}
-          </select>
-          <span className="text-sm text-gray-500">
-            Selecione uma forma de pagamento
-          </span>
-        </label>
+          </Select>
+        </FormControl>
 
-        {/* recurrence_type_id */}
-        <label className="block">
-          Tipo de recorrência:
-          <select
+        {/* TIPO RECORRÊNCIA */}
+        <FormControl fullWidth>
+          <InputLabel id="demo-simple-select-label">
+            É uma despesa...
+          </InputLabel>
+          <Select
+            id="demo-simple-select"
             name="recurrence_type_id"
-            value={formData.recurrence_type_id}
+            labelId="demo-simple-select-label"
+            label="É uma despesa..."
+            value={formData.recurrence_type_id || ""}
             onChange={handleChangeFormData}
             onClick={fetchRecurrenceTypes}
-            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+            className="w-full"
           >
-            <option value=""></option>
             {recurrenceTypes.map((recurrenceType) => (
-              <option key={recurrenceType.id} value={recurrenceType.id}>
+              <MenuItem key={recurrenceType.id} value={recurrenceType.id}>
                 {recurrenceType.name}
-              </option>
+              </MenuItem>
             ))}
-          </select>
-          <span className="text-sm text-gray-500">
-            Selecione um tipo de recorrência
-          </span>
-        </label>
+          </Select>
+        </FormControl>
 
-        {/* due date recurrence */}
-        <label className="block">
-          Data de vencimento da recorrência:
-          <input
-            type="date"
-            name="due_date_recurrence"
-            value={
-              formData.due_date_recurrence instanceof Date
-                ? formData.due_date_recurrence.toISOString().split("T")[0]
-                : formData.due_date_recurrence
-            }
-            onChange={handleChangeFormData}
-            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-          />
-        </label>
+        {/* DATA VENCIMENTO */}
+        {(formData.recurrence_type_id === 1 ||
+          formData.recurrence_type_id === 3) && (
+          <LocalizationProvider
+            dateAdapter={AdapterDayjs}
+            adapterLocale="pt-br"
+          >
+            <DatePicker
+              value={
+                formData.due_date
+                  ? dayjs(formData.due_date, "DD/MM/YYYY")
+                  : null
+              }
+              onChange={(newValue) => {
+                setFormData((prevState) => ({
+                  ...prevState,
+                  due_date: newValue ? newValue.format("DD/MM/YYYY") : "",
+                }));
+              }}
+              format="DD/MM/YYYY"
+              slotProps={{
+                textField: {
+                  placeholder: "Selecione a data de vencimento",
+                },
+              }}
+              className="w-full"
+            />
+          </LocalizationProvider>
+        )}
 
-        {/* installment */}
-        <label className="block">
-          Número de parcelas:
-          <input
+        {/* NÚMERO DE PARCELAS */}
+        {formData.recurrence_type_id === 3 && (
+          <TextField
             type="number"
             name="installment"
+            variant="outlined"
+            label="Número de Parcelas"
             value={formData.installment}
-            onChange={handleChangeFormData}
-            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+            onChange={(e) => {
+              const value = Number(e.target.value);
+              if (value < 0) return;
+              handleChangeFormData(e);
+            }}
+            className="w-full"
+            inputProps={{ min: 1 }}
           />
-        </label>
-        {/* button submit */}
+        )}
+
+        {/* BOTÃO ENVIAR */}
         <button
           type="submit"
           disabled={isLoading}
-          className="mt-4 bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 disabled:opacity-50"
+          className="mt-8 w-full flex items-center justify-center gap-3 bg-teal-500 text-white py-3 px-6 rounded-xl font-bold text-lg shadow-md 
+            transition-transform duration-200 hover:bg-teal-600 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? "Enviando..." : "Enviar"}
+          {isLoading ? (
+            <>
+              <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span>Enviando...</span>
+            </>
+          ) : (
+            "Enviar"
+          )}
         </button>
       </form>
 
-      {/* Lista de despesas
-      <ul className="mt-6 space-y-4">
-        {Array.isArray(expenses) &&
-          expenses.map((expense) => (
-            <li
-              key={expense.id}
-              className="border border-gray-300 rounded-md p-4"
+      {/* DIALOGO SUCESSO CADASTRAR */}
+      <Dialog
+        open={openRegisterDialogSuccess}
+        onClose={() => setOpenRegisterDialogSuccess(false)}
+        aria-labelledby="success-dialog-title"
+        aria-describedby="success-dialog-description"
+        className="flex items-center justify-center"
+      >
+        <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full text-center border-t-4 border-green-500">
+          {/* DIÁLOGO TÍTULO */}
+          <DialogTitle
+            id="success-dialog-title"
+            className="text-2xl text-green-600 font-bold italic"
+          >
+            🎉 SUCESSO!
+          </DialogTitle>
+
+          {/* DIÁLOGO MENSAGEM */}
+          <DialogContent>
+            <DialogContentText
+              id="success-dialog-description"
+              className="text-lg text-gray-700 font-medium mt-2"
             >
-              <p>
-                <strong>Descrição:</strong> {expense.description}
-              </p>
-              <p>
-                <strong>Valor:</strong> {expense.amount}
-              </p>
+              Despesa cadastrada com sucesso!
+            </DialogContentText>
+          </DialogContent>
 
-              <p>
-                <strong>Data de entrada:</strong>{" "}
-                {new Date(expense.entry_date).toLocaleDateString("pt-BR")}
-              </p>
-
-              <p>
-                <strong>Categoria:</strong> {expense.expenseCategory.name}
-              </p>
-              <p>
-                <strong>Método de pagamento:</strong>{" "}
-                {expense.paymentMethod.name}
-              </p>
-              <p>
-                <strong>Tipo de recorrência:</strong>{" "}
-                {expense.recurrenceType.name}
-              </p>
-              <p>
-                <strong>Data de vencimento da recorrência:</strong>{" "}
-                {expense.due_date_recurrence ? new Date(expense.due_date_recurrence).toLocaleDateString("pt-BR") : "N/A"}
-              </p>
-              <p>
-                <strong>Parcelas:</strong> {expense.installment}
-              </p>
-            </li>
-          ))}
-      </ul> */}
+          {/* DIÁLOGO BOTÃO OK */}
+          <DialogActions className="mt-4 flex justify-center">
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpenRegisterDialogSuccess(false);
+              }}
+              className="bg-green-500 hover:bg-green-600 text-white text-md font-semibold italic py-2 px-6 rounded-lg shadow-md transition-all duration-200 active:scale-95"
+              autoFocus
+            >
+              Ok, Entendi!
+            </Button>
+          </DialogActions>
+        </div>
+      </Dialog>
     </div>
   );
-}
+};
 
 export default ExpensePage;
